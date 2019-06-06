@@ -24,6 +24,10 @@ CONTENT_TYPE = 'Content-Type'
 class Files:
     
     def on_post(self, req, resp):
+        """
+        Creation extention.
+        create upload resource in the Server.
+        """
         id = str(uuid4())
         # get request headers
         upload_length = req.headers.get(UPLOAD_LENGTH)
@@ -40,6 +44,12 @@ class Files:
 
 
     def on_options(self, req, resp):
+        """
+        Options.
+        Options returns Server's current configuration.
+        It must contain the Tus-Version header.
+        And it may contain the Tus-Extension and Tus-Max-Size headers.
+        """
         _set_common_headers(resp)
 
         resp.headers[TUS_RESUMABLE] = TUS_VERSION
@@ -54,6 +64,12 @@ class Files:
 class File:
 
     def on_head(self, req, resp, *, file_id):
+        """
+        Head.
+        Head returns current Upload-Offset header.
+        If the size of the upload is known, Server must 
+        include the Upload-Length header.
+        """
         data = db.get(file_id)
 
         _set_common_headers(resp)
@@ -72,6 +88,11 @@ class File:
 
 
     async def on_patch(self, req, resp, *, file_id):
+        """
+        Patch.
+        Patch apply the bytes at the given offset.
+        Specified resource is not known, it returns 404.
+        """
         data = db.get(file_id)
 
         _set_common_headers(resp)
