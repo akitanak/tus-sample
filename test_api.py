@@ -14,7 +14,7 @@ def api():
 
 def test_creation_extention_creates_upload_path(api):
     """
-    CREATION extention create upload path.
+    CREATION extention creates upload path.
     """
     
     resp = request_creation(100, api)
@@ -45,7 +45,7 @@ def test_head_request_response_upload_offset_when_resource_exists(api):
 
 def test_head_request_response_404_when_resource_does_not_exists(api):
     """
-    HEAD request response 404 Not found, if resource does not exists.
+    HEAD request responses 404 Not found, if resource does not exists.
     """
     resource_id = str(uuid.uuid4())
 
@@ -58,6 +58,9 @@ def test_head_request_response_404_when_resource_does_not_exists(api):
 
 
 def test_patch_request_apply_received_bytes_at_given_offset(api):
+    """
+    PATCH request apply received bytes at given offset and response new offset.
+    """
     data = b'abcd\nefgh\nijkl\nmnop\n'
     resp = request_creation(len(data), api)
     assert resp.status_code == 201
@@ -78,6 +81,9 @@ def test_patch_request_apply_received_bytes_at_given_offset(api):
 
 
 def test_patch_request_response_404_when_resource_does_not_exists(api):
+    """
+    PATCH request responses 404 when specified resource does not exists.
+    """
     data = b'abcd\nefgh\nijkl\nmnop\n'
     resp = request_creation(len(data), api)
     assert resp.status_code == 201
@@ -92,6 +98,17 @@ def test_patch_request_response_404_when_resource_does_not_exists(api):
 
     assert resp.status_code == 404
 
+def test_options_request_response_servers_current_configuration_about_tus(api):
+    """
+    OPTIONS request responses Servers current configuration about Tus.
+    """
+
+    resp = api.requests.options('/files')
+
+    assert resp.headers['Tus-Resumable'] == '1.0.0'
+    assert resp.headers['Tus-Version'] == '1.0.0'
+    assert resp.headers['Tus-Max-Size'] == str(1024 ** 3)
+    assert resp.headers['Tus-Extension'] == 'creation'
 
 def request_creation(upload_length, api):
     headers = {
