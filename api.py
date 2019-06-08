@@ -28,21 +28,26 @@ class Files:
         Creation extension.
         create upload resource in the Server.
         """
-        # get request headers
-        upload_data = None
         upload_length = req.headers.get(UPLOAD_LENGTH)
         upload_defer_length = req.headers.get(UPLOAD_DEFER_LENGTH)
-        if upload_length is not None:
-            upload_data = db.add_uploads(upload_length)
-        elif upload_defer_length is not None and upload_defer_length == '1':
-            upload_data = db.add_uploads(upload_length=None, upload_defer_length='1')
-        else:
+
+        # Upload-Length header or Upload-Defer-Length header must be specified.
+        # And Upload-Defer-Length header must be '1' if it was specified.
+        if upload_length is None and upload_defer_length is not '1':
             resp.status_code = api.status_codes.HTTP_400
             return
+        
+        def set_creation_headers(resp, upload_data):
+            resp.headers[TUS_RESUMABLE] = TUS_VERSION
+            resp.headers[LOCATION] = f'/files/{upload_data.id}'
+            resp.status_code = api.status_codes.HTTP_201
 
-        resp.headers[TUS_RESUMABLE] = TUS_VERSION
-        resp.headers[LOCATION] = f'/files/{upload_data.id}'
-        resp.status_code = api.status_codes.HTTP_201
+        if upload_length is not None:
+            upload_data = db.add_uploads(upload_length)
+            set_creation_headers(resp, upload_data)
+        else:
+            upload_data = db.add_uploads(upload_length=None, upload_defer_length='1')
+            set_creation_headers(resp, upload_data)
 
 
     def on_options(self, req, resp):
