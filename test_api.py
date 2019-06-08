@@ -151,7 +151,7 @@ def test_options_request_response_servers_current_configuration_about_tus(api):
     assert resp.headers['Tus-Resumable'] == '1.0.0'
     assert resp.headers['Tus-Version'] == '1.0.0'
     assert resp.headers['Tus-Max-Size'] == str(1024 ** 3)
-    assert resp.headers['Tus-Extension'] == 'creation'
+    assert resp.headers['Tus-Extension'] == 'creation,creation-defer-length'
 
 def request_creation(upload_length, api):
     headers = {

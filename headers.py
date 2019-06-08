@@ -1,0 +1,7 @@
+UPLOAD_LENGTH = 'Upload-Length'
+UPLOAD_OFFSET = 'Upload-Offset'
+UPLOAD_DEFER_LENGTH = 'Upload-Defer-Length'
+TUS_RESUMABLE = 'Tus-Resumable'
+LOCATION = 'Location'
+CACHE_CONTROL = 'Cache-Control'
+CONTENT_TYPE = 'Content-Type'

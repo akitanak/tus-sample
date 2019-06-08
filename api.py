@@ -5,6 +5,7 @@ from pathlib import Path
 import responder
 
 from database import Database
+from headers import *
 
 api = responder.API()
 
@@ -13,13 +14,10 @@ db = Database()
 
 TUS_VERSION = '1.0.0'
 PATCH_REQ_CONTENT_TYPE = 'application/offset+octet-stream'
-UPLOAD_LENGTH = 'Upload-Length'
-UPLOAD_OFFSET = 'Upload-Offset'
-UPLOAD_DEFER_LENGTH = 'Upload-Defer-Length'
-TUS_RESUMABLE = 'Tus-Resumable'
-LOCATION = 'Location'
-CACHE_CONTROL = 'Cache-Control'
-CONTENT_TYPE = 'Content-Type'
+AVAILABLE_EXTENSION = [
+    'creation',
+    'creation-defer-length'
+]
 
 
 @api.route('/files')
@@ -59,7 +57,7 @@ class Files:
         resp.headers[TUS_RESUMABLE] = TUS_VERSION
         resp.headers['Tus-Version'] = TUS_VERSION
         resp.headers['Tus-Max-Size'] = str(1024 ** 3)
-        resp.headers['Tus-Extension'] = 'creation'
+        resp.headers['Tus-Extension'] = ','.join(AVAILABLE_EXTENSION)
 
         resp.status_code = api.status_codes.HTTP_200
 
