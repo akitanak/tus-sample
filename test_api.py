@@ -26,6 +26,24 @@ def test_creation_extention_creates_upload_path(api):
     assert_uuid_format(path.name)
 
 
+def test_creation_extention_can_deferred_the_length_of_upload(api):
+    """
+    CREATION extention can deferred the length of upload.
+    """
+    headers = {
+        'Upload-Defer-Length': '1',
+        'Tus-Resumable': '1.0.0'
+    }
+
+    resp = api.requests.post(f'/files', headers=headers)
+
+    assert resp.status_code == 201
+    assert resp.headers.get('Upload-Length') is None
+    assert resp.headers['Tus-Resumable'] == '1.0.0'
+    path = Path(resp.headers['Location'])
+    assert path.parent == Path('/files')
+    assert_uuid_format(path.name)
+
 def test_head_request_response_upload_offset_when_resource_exists(api):
     """
     HEAD request responses Upload-Offset header, if resource exists.

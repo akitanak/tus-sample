@@ -15,7 +15,7 @@ TUS_VERSION = '1.0.0'
 PATCH_REQ_CONTENT_TYPE = 'application/offset+octet-stream'
 UPLOAD_LENGTH = 'Upload-Length'
 UPLOAD_OFFSET = 'Upload-Offset'
-UPLOAD_DEFER_LENGTH = 'Uplpoad-Defer-Length'
+UPLOAD_DEFER_LENGTH = 'Upload-Defer-Length'
 TUS_RESUMABLE = 'Tus-Resumable'
 LOCATION = 'Location'
 CACHE_CONTROL = 'Cache-Control'
@@ -31,9 +31,16 @@ class Files:
         create upload resource in the Server.
         """
         # get request headers
+        upload_data = None
         upload_length = req.headers.get(UPLOAD_LENGTH)
-
-        upload_data = db.add_uploads(upload_length)
+        upload_defer_length = req.headers.get(UPLOAD_DEFER_LENGTH)
+        if upload_length is not None:
+            upload_data = db.add_uploads(upload_length)
+        elif upload_defer_length is not None and upload_defer_length == '1':
+            upload_data = db.add_uploads(upload_length=None, upload_defer_length='1')
+        else:
+            resp.status_code = api.status_codes.HTTP_400
+            return
 
         resp.headers[TUS_RESUMABLE] = TUS_VERSION
         resp.headers[LOCATION] = f'/files/{upload_data.id}'
