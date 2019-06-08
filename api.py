@@ -12,10 +12,11 @@ api = responder.API()
 global db
 db = Database()
 
-TUS_VERSION = '1.0.0'
+CURRENT_TUS_VERSION = '1.0.0'
 SUPPORTED_VERSIONS = [
     '1.0.0'
 ]
+ACCEPTABLE_UPLOAD_SIZE = 1024 ** 3
 PATCH_REQ_CONTENT_TYPE = 'application/offset+octet-stream'
 AVAILABLE_EXTENSION = [
     'creation',
@@ -41,7 +42,7 @@ class Files:
             return
         
         def set_creation_headers(resp, upload_data):
-            resp.headers[TUS_RESUMABLE] = TUS_VERSION
+            resp.headers[TUS_RESUMABLE] = CURRENT_TUS_VERSION
             resp.headers[LOCATION] = f'/files/{upload_data.id}'
             resp.status_code = api.status_codes.HTTP_201
 
@@ -62,10 +63,10 @@ class Files:
         """
         _set_common_headers(resp)
 
-        resp.headers[TUS_RESUMABLE] = TUS_VERSION
-        resp.headers['Tus-Version'] = ','.join(SUPPORTED_VERSIONS)
-        resp.headers['Tus-Max-Size'] = str(1024 ** 3)
-        resp.headers['Tus-Extension'] = ','.join(AVAILABLE_EXTENSION)
+        resp.headers[TUS_RESUMABLE] = CURRENT_TUS_VERSION
+        resp.headers[TUS_VERSION] = ','.join(SUPPORTED_VERSIONS)
+        resp.headers[TUS_MAX_SIZE] = str(ACCEPTABLE_UPLOAD_SIZE)
+        resp.headers[TUS_EXTENSION] = ','.join(AVAILABLE_EXTENSION)
 
         resp.status_code = api.status_codes.HTTP_200
 
@@ -142,7 +143,7 @@ class File:
     
 def _set_common_headers(resp):
     resp.headers[CACHE_CONTROL] = 'no-store'
-    resp.headers[TUS_RESUMABLE] = TUS_VERSION
+    resp.headers[TUS_RESUMABLE] = CURRENT_TUS_VERSION
 
 
 if __name__ == '__main__':
