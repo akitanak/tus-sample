@@ -27,7 +27,7 @@ class Files:
     
     def on_post(self, req, resp):
         """
-        Creation extention.
+        Creation extension.
         create upload resource in the Server.
         """
         # get request headers

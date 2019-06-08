@@ -12,9 +12,9 @@ def api():
     return service.api
 
 
-def test_creation_extention_creates_upload_path(api):
+def test_creation_extension_creates_upload_path(api):
     """
-    CREATION extention creates upload path.
+    CREATION extension creates upload path.
     """
     
     resp = request_creation(100, api)
@@ -26,9 +26,9 @@ def test_creation_extention_creates_upload_path(api):
     assert_uuid_format(path.name)
 
 
-def test_creation_extention_can_deferred_the_length_of_upload(api):
+def test_creation_extension_can_deferred_the_length_of_upload(api):
     """
-    CREATION extention can deferred the length of upload.
+    CREATION extension can deferred the length of upload.
     """
     headers = {
         'Upload-Defer-Length': '1',
@@ -44,9 +44,9 @@ def test_creation_extention_can_deferred_the_length_of_upload(api):
     assert path.parent == Path('/files')
     assert_uuid_format(path.name)
 
-def test_creation_extention_response_400_when_upload_defer_length_value_is_not_1(api):
+def test_creation_extension_response_400_when_upload_defer_length_value_is_not_1(api):
     """
-    CREATION extention response 400, when Upload-Defer-Length header value is not 1.
+    CREATION extension response 400, when Upload-Defer-Length header value is not 1.
     """
     headers = {
         'Upload-Defer-Length': '0',
@@ -59,7 +59,7 @@ def test_creation_extention_response_400_when_upload_defer_length_value_is_not_1
 
 def test_creation_extension_response_400_when_upload_length_and_upload_defer_length_are_not_specified(api):
     """
-    CREATION extention response 400, when Upload-Length and Upload-Defer-Length header is not specified.
+    CREATION extension response 400, when Upload-Length and Upload-Defer-Length header is not specified.
     """
     headers = {
         'Tus-Resumable': '1.0.0'
