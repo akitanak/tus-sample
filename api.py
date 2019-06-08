@@ -13,6 +13,9 @@ global db
 db = Database()
 
 TUS_VERSION = '1.0.0'
+SUPPORTED_VERSIONS = [
+    '1.0.0'
+]
 PATCH_REQ_CONTENT_TYPE = 'application/offset+octet-stream'
 AVAILABLE_EXTENSION = [
     'creation',
@@ -60,7 +63,7 @@ class Files:
         _set_common_headers(resp)
 
         resp.headers[TUS_RESUMABLE] = TUS_VERSION
-        resp.headers['Tus-Version'] = TUS_VERSION
+        resp.headers['Tus-Version'] = ','.join(SUPPORTED_VERSIONS)
         resp.headers['Tus-Max-Size'] = str(1024 ** 3)
         resp.headers['Tus-Extension'] = ','.join(AVAILABLE_EXTENSION)
 
