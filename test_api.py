@@ -69,6 +69,14 @@ def test_creation_extension_response_400_when_upload_length_and_upload_defer_len
 
     assert resp.status_code == 400    
 
+def test_creation_extension_response_413_when_upload_length_exceeds_max_size(api):
+    """
+    CREATION extension responses 413, when Upload-Length exceeds Tus-Max-Size.
+    """
+    resp = request_creation(1024 ** 3 + 1, api)
+
+    assert resp.status_code == 413
+
 def test_head_request_response_upload_offset_when_resource_exists(api):
     """
     HEAD request responses Upload-Offset header, if resource exists.

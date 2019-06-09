@@ -47,8 +47,17 @@ class Files:
             resp.status_code = api.status_codes.HTTP_201
 
         if upload_length is not None:
-            upload_data = db.add_uploads(upload_length)
-            set_creation_headers(resp, upload_data)
+            if not upload_length.isdecimal():
+                resp.status_code = api.status_codes.HTTP_400
+                return
+
+            if int(upload_length) <= ACCEPTABLE_UPLOAD_SIZE:
+                upload_data = db.add_uploads(upload_length)
+                set_creation_headers(resp, upload_data)
+
+            else:
+                resp.status_code = api.status_codes.HTTP_413
+
         else:
             upload_data = db.add_uploads(upload_length=None, upload_defer_length='1')
             set_creation_headers(resp, upload_data)
