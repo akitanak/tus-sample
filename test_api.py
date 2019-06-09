@@ -16,7 +16,7 @@ def test_creation_extension_creates_upload_path(api):
     """
     CREATION extension creates upload path.
     """
-    
+
     resp = request_creation(100, api)
 
     assert resp.status_code == 201
@@ -44,6 +44,7 @@ def test_creation_extension_can_deferred_the_length_of_upload(api):
     assert path.parent == Path('/files')
     assert_uuid_format(path.name)
 
+
 def test_creation_extension_response_400_when_upload_defer_length_value_is_not_1(api):
     """
     CREATION extension response 400, when Upload-Defer-Length header value is not 1.
@@ -57,6 +58,7 @@ def test_creation_extension_response_400_when_upload_defer_length_value_is_not_1
 
     assert resp.status_code == 400
 
+
 def test_creation_extension_response_400_when_upload_length_and_upload_defer_length_are_not_specified(api):
     """
     CREATION extension response 400, when Upload-Length and Upload-Defer-Length header is not specified.
@@ -67,7 +69,8 @@ def test_creation_extension_response_400_when_upload_length_and_upload_defer_len
 
     resp = api.requests.post(f'/files', headers=headers)
 
-    assert resp.status_code == 400    
+    assert resp.status_code == 400
+
 
 def test_creation_extension_response_413_when_upload_length_exceeds_max_size(api):
     """
@@ -76,6 +79,7 @@ def test_creation_extension_response_413_when_upload_length_exceeds_max_size(api
     resp = request_creation(1024 ** 3 + 1, api)
 
     assert resp.status_code == 413
+
 
 def test_head_request_response_upload_offset_when_resource_exists(api):
     """
@@ -93,6 +97,7 @@ def test_head_request_response_upload_offset_when_resource_exists(api):
     assert resp.headers['Upload-Length'] == '100'
     assert resp.headers['Tus-Resumable'] == '1.0.0'
     assert resp.headers['Cache-Control'] == 'no-store'
+
 
 def test_head_request_response_404_when_resource_does_not_exists(api):
     """
@@ -138,7 +143,7 @@ def test_patch_request_response_404_when_resource_does_not_exists(api):
     data = b'abcd\nefgh\nijkl\nmnop\n'
     resp = request_creation(len(data), api)
     assert resp.status_code == 201
-    
+
     headers = {
             'Content-Type': 'application/offset+octet-stream',
             'Upload-Offset': '0',
@@ -148,6 +153,7 @@ def test_patch_request_response_404_when_resource_does_not_exists(api):
     resp = api.requests.patch(resource_path, headers=headers, data=data[0:5])
 
     assert resp.status_code == 404
+
 
 def test_options_request_response_servers_current_configuration_about_tus(api):
     """
@@ -161,6 +167,7 @@ def test_options_request_response_servers_current_configuration_about_tus(api):
     assert resp.headers['Tus-Max-Size'] == str(1024 ** 3)
     assert resp.headers['Tus-Extension'] == 'creation,creation-defer-length'
 
+
 def request_creation(upload_length, api):
     headers = {
         'Content-Length': '0',
@@ -168,6 +175,7 @@ def request_creation(upload_length, api):
         'Tus-Resumable': '1.0.0'
     }
     return api.requests.post("/files", headers=headers)
+
 
 def assert_uuid_format(id):
     uuid_pattern = r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'

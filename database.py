@@ -31,7 +31,7 @@ class Database:
 
     def get_by_id(self, id):
         return self.uploads.get(id)
-    
+
     def set_upload_length(self, id, upload_length):
         data = self.uploads.get(id)
         data.upload_length = upload_length
