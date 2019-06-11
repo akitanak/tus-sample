@@ -34,12 +34,16 @@ class Files:
         """
         upload_length = req.headers.get(headers.UPLOAD_LENGTH)
         upload_defer_length = req.headers.get(headers.UPLOAD_DEFER_LENGTH)
+        upload_metadata = req.headers.get(headers.UPLOAD_METADATA)
 
         # Upload-Length header or Upload-Defer-Length header must be specified.
         # And Upload-Defer-Length header must be '1' if it was specified.
         if upload_length is None and upload_defer_length != '1':
             resp.status_code = api.status_codes.HTTP_400
             return
+
+        if upload_metadata is not None:
+            upload_metadata = dict([tuple(kv.split(' ')) for kv in upload_metadata.split(',')])
 
         def set_creation_headers(resp, upload_data):
             resp.headers[headers.TUS_RESUMABLE] = CURRENT_TUS_VERSION
@@ -52,14 +56,14 @@ class Files:
                 return
 
             if int(upload_length) <= ACCEPTABLE_UPLOAD_SIZE:
-                upload_data = db.add_uploads(upload_length)
+                upload_data = db.add_uploads(upload_length, metadata=upload_metadata)
                 set_creation_headers(resp, upload_data)
 
             else:
                 resp.status_code = api.status_codes.HTTP_413
 
         else:
-            upload_data = db.add_uploads(upload_length=None, upload_defer_length='1')
+            upload_data = db.add_uploads(upload_length=None, upload_defer_length='1', metadata=upload_metadata)
             set_creation_headers(resp, upload_data)
 
     def on_options(self, req, resp):
@@ -98,6 +102,8 @@ class File:
             return
 
         resp.headers[headers.UPLOAD_OFFSET] = str(upload_data.upload_offset)
+        if upload_data.upload_metadata is not None:
+            resp.headers[headers.UPLOAD_METADATA] = to_metadata_header(upload_data.upload_metadata)
 
         if upload_data.upload_length is None:
             resp.headers[headers.UPLOAD_DEFER_LENGTH] = str(1)
@@ -151,6 +157,10 @@ class File:
 def _set_common_headers(resp):
     resp.headers[headers.CACHE_CONTROL] = 'no-store'
     resp.headers[headers.TUS_RESUMABLE] = CURRENT_TUS_VERSION
+
+
+def to_metadata_header(metadata):
+    return ','.join([f'{k} {v}' for k, v in metadata.items()])
 
 
 if __name__ == '__main__':
