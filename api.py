@@ -43,7 +43,9 @@ class Files:
             return
 
         if upload_metadata is not None:
-            upload_metadata = dict([tuple(kv.split(' ')) for kv in upload_metadata.split(',')])
+            upload_metadata = dict(
+                [tuple(kv.split(' ')) for kv in upload_metadata.split(',') if len(kv.split(' ')) == 2]
+            )
 
         def set_creation_headers(resp, upload_data):
             resp.headers[headers.TUS_RESUMABLE] = CURRENT_TUS_VERSION

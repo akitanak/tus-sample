@@ -1,6 +1,7 @@
 from pathlib import Path
 import uuid
 import re
+import base64
 
 
 import pytest
@@ -10,6 +11,14 @@ import api as service
 @pytest.fixture
 def api():
     return service.api
+
+
+def base64_encode(value):
+    return base64.standard_b64encode(value.encode()).decode()
+
+
+def base64_decode(value):
+    return base64.standard_b64decode(value.encode()).decode()
 
 
 def test_creation_extension_creates_upload_path(api):
@@ -49,9 +58,12 @@ def test_creation_extension_can_receive_upload_metadata(api):
     """
     CREATION extension can receive upload metadata.
     """
+    metadata1 = 'value1'
+    metadata2 = 'value2'
+
     headers = {
         'Upload-Length': '100',
-        'Upload-Metadata': 'key1 dmFsdWUx,key2 dmFsdWUy',
+        'Upload-Metadata': f'key1 {base64_encode(metadata1)},key2 {base64_encode(metadata2)}',
         'Tus-Resumable': '1.0.0'
     }
 
@@ -65,7 +77,40 @@ def test_creation_extension_can_receive_upload_metadata(api):
     resp = api.requests.head(resource_path)
 
     assert resp.status_code == 200
-    assert resp.headers['Upload-Metadata'] == 'key1 dmFsdWUx,key2 dmFsdWUy'
+    upload_metadata = resp.headers['Upload-Metadata']
+    metadata = upload_metadata.split(',')
+    assert base64_decode(metadata[0].split(' ')[1]) == metadata1
+    assert base64_decode(metadata[1].split(' ')[1]) == metadata2
+
+
+def test_creation_extension_ignore_invalid_metadata(api):
+    """
+    CREATION extension ignore invalid metadata
+    """
+    metadata1 = 'value1'
+    metadata2 = 'value2'
+
+    headers = {
+        'Upload-Length': '100',
+        'Upload-Metadata': f'key0,key1 {base64_encode(metadata1)},key2 {base64_encode(metadata2)}',
+        'Tus-Resumable': '1.0.0'
+    }
+
+    resp = api.requests.post(f'/files', headers=headers)
+
+    assert resp.status_code == 201
+
+    resource_path = resp.headers['Location']
+    assert resource_path.startswith('/files/')
+
+    resp = api.requests.head(resource_path)
+
+    assert resp.status_code == 200
+    upload_metadata = resp.headers['Upload-Metadata']
+    metadata = upload_metadata.split(',')
+    assert len(metadata) == 2
+    assert base64_decode(metadata[0].split(' ')[1]) == metadata1
+    assert base64_decode(metadata[1].split(' ')[1]) == metadata2
 
 
 def test_creation_extension_response_400_when_upload_defer_length_value_is_not_1(api):
