@@ -7,7 +7,22 @@ import responder
 from database import Database
 import headers
 
-api = responder.API()
+cors_params = {
+    'allow_origins': '*',
+    'allow_methods': ['GET', 'POST', 'HEAD', 'OPTIONS', 'PATCH'],
+    'allow_headers': ['*'],
+    'expose_headers': [
+        headers.TUS_EXTENSION,
+        headers.TUS_MAX_SIZE,
+        headers.TUS_RESUMABLE,
+        headers.TUS_VERSION,
+        headers.UPLOAD_DEFER_LENGTH,
+        headers.UPLOAD_LENGTH,
+        headers.UPLOAD_METADATA,
+        headers.UPLOAD_OFFSET
+    ]
+}
+api = responder.API(cors=True, cors_params=cors_params, allowed_hosts=['*'])
 
 global db
 db = Database()
@@ -22,6 +37,13 @@ AVAILABLE_EXTENSION = [
     'creation',
     'creation-defer-length'
 ]
+
+
+@api.route('/')
+class Default:
+    def on_get(self, req, resp):
+        url = api.static_url('js/demo.js')
+        resp.content = url
 
 
 @api.route('/files')
@@ -111,6 +133,22 @@ class File:
             resp.headers[headers.UPLOAD_DEFER_LENGTH] = str(1)
         else:
             resp.headers[headers.UPLOAD_LENGTH] = str(upload_data.upload_length)
+
+    def on_get(self, req, resp, *, file_id):
+        """
+        Get.
+        Get responses uploaded file.
+        """
+        upload_data = db.get_by_id(UUID(file_id))
+
+        if upload_data is None:
+            resp.status_code = api.status_codes.HTTP_404
+            return
+
+        uploaded_file = Path('/tmp', file_id)
+
+        with open(uploaded_file, mode='rb') as f:
+            resp.content = f.read()
 
     async def on_patch(self, req, resp, *, file_id):
         """
