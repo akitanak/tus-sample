@@ -173,9 +173,18 @@ class File:
         req_offset = req.headers.get(headers.UPLOAD_OFFSET)
         current_offset = upload_data.upload_offset
 
+        # request offset and current offset is not match.
         if req_offset != str(current_offset):
             resp.status_code = api.status_codes.HTTP_409
             return
+
+        # request offset is over upload length.
+        content_length = req.headers.get(headers.CONTENT_LENGTH)
+        if content_length is not None and content_length.isdecimal():
+            if upload_data.upload_defer_length != 1 \
+                    and current_offset + int(content_length) > int(upload_data.upload_length):
+                resp.status_code = api.status_codes.HTTP_400
+                return
 
         resp.status_code = api.status_codes.HTTP_204
 

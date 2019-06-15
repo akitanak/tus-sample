@@ -204,6 +204,32 @@ def test_patch_request_apply_received_bytes_at_given_offset(api):
         assert resp.headers['Cache-Control'] == 'no-store'
 
 
+def test_patch_request_response_400_when_upload_length_exceeded(api):
+    """
+    PATCH request response 400, when upload length exceeded.
+    """
+    data = b'abcd\nefgh\nijkl\nmnop\n'
+    resp = request_creation(len(data)-1, api)
+    assert resp.status_code == 201
+    resource_path = resp.headers['Location']
+
+    for i in range(0, 4):
+        headers = {
+            'Content-Type': 'application/offset+octet-stream',
+            'Upload-Offset': f'{i * 5}',
+            'Tus-Resumable': '1.0.0'
+        }
+        resp = api.requests.patch(resource_path, headers=headers, data=data[i*5:(i+1)*5])
+
+        if i < 3:
+            assert resp.status_code == 204
+            assert resp.headers['Upload-Offset'] == str((i+1) * 5)
+            assert resp.headers['Tus-Resumable'] == '1.0.0'
+            assert resp.headers['Cache-Control'] == 'no-store'
+        else:
+            assert resp.status_code == 400
+
+
 def test_patch_request_response_404_when_resource_does_not_exists(api):
     """
     PATCH request responses 404 when specified resource does not exists.
