@@ -1,4 +1,5 @@
 import os
+import base64
 from uuid import UUID
 from pathlib import Path
 
@@ -65,9 +66,7 @@ class Files:
             return
 
         if upload_metadata is not None:
-            upload_metadata = dict(
-                [tuple(kv.split(' ')) for kv in upload_metadata.split(',') if len(kv.split(' ')) == 2]
-            )
+            upload_metadata = to_metadata_dict(upload_metadata)
 
         def set_creation_headers(resp, upload_data):
             resp.headers[headers.TUS_RESUMABLE] = CURRENT_TUS_VERSION
@@ -200,7 +199,23 @@ def _set_common_headers(resp):
 
 
 def to_metadata_header(metadata):
-    return ','.join([f'{k} {v}' for k, v in metadata.items()])
+    def encode_to_b64(decoded):
+        return base64.standard_b64encode(decoded.encode()).decode()
+
+    return ','.join([f'{k} {encode_to_b64(v)}' for k, v in metadata.items()])
+
+
+def to_metadata_dict(metadata_header):
+    def decode_from_b64(encoded):
+        return base64.standard_b64decode(encoded.encode()).decode()
+
+    def decoded_kv(encoded_kv):
+        decoded = encoded_kv.split(' ')
+        return (decoded[0], decode_from_b64(decoded[1]))
+
+    return dict(
+        [decoded_kv(kv) for kv in metadata_header.split(',') if len(kv.split(' ')) == 2]
+    )
 
 
 if __name__ == '__main__':
