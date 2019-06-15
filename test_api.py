@@ -236,6 +236,27 @@ def test_options_request_response_servers_current_configuration_about_tus(api):
     assert resp.headers['Tus-Extension'] == 'creation,creation-defer-length'
 
 
+def test_get_request_response_uploaded_file(api):
+    """
+    GET responses uploaded file.
+    """
+    data = b'abcd\nefgh\nijkl\nmnop\n'
+    resp = request_creation(len(data), api)
+    resource_path = resp.headers['Location']
+
+    for i in range(0, 4):
+        headers = {
+            'Content-Type': 'application/offset+octet-stream',
+            'Upload-Offset': f'{i * 5}',
+            'Tus-Resumable': '1.0.0'
+        }
+        resp = api.requests.patch(resource_path, headers=headers, data=data[i*5:(i+1)*5])
+
+    resp = api.requests.get(resource_path)
+
+    assert resp.content == data
+
+
 def request_creation(upload_length, api):
     headers = {
         'Content-Length': '0',
