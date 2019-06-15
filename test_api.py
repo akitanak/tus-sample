@@ -83,6 +83,42 @@ def test_creation_extension_can_receive_upload_metadata(api):
     assert base64_decode(metadata[1].split(' ')[1]) == metadata2
 
 
+def test_creation_extension_can_receive_upload_concat_header(api):
+    """
+    CREATION extension can receive Upload-Concat header.
+    """
+    headers = {
+        'Upload-Concat': 'partial',
+        'Upload-Length': '100',
+        'Tus-Resumable': '1.0.0'
+    }
+
+    resp = api.requests.post(f'/files', headers=headers)
+
+    assert resp.status_code == 201
+    resource_path = resp.headers['Location']
+
+    resp = api.requests.head(resource_path)
+
+    assert resp.status_code == 200
+    assert resp.headers['Upload-Concat'] == 'partial'
+
+
+def test_creation_extension_responses_400_when_invalid_upload_concat_header_received(api):
+    """
+    CREATION extension responses 400, when ivalid Upload-Concat header received.
+    """
+    headers = {
+        'Upload-Concat': 'hogehoge',
+        'Upload-Length': '100',
+        'Tus-Resumable': '1.0.0'
+    }
+
+    resp = api.requests.post(f'/files', headers=headers)
+
+    assert resp.status_code == 400
+
+
 def test_creation_extension_ignore_invalid_metadata(api):
     """
     CREATION extension ignore invalid metadata

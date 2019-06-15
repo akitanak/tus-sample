@@ -58,6 +58,7 @@ class Files:
         upload_length = req.headers.get(headers.UPLOAD_LENGTH)
         upload_defer_length = req.headers.get(headers.UPLOAD_DEFER_LENGTH)
         upload_metadata = req.headers.get(headers.UPLOAD_METADATA)
+        upload_concat = req.headers.get(headers.UPLOAD_CONCAT)
 
         # Upload-Length header or Upload-Defer-Length header must be specified.
         # And Upload-Defer-Length header must be '1' if it was specified.
@@ -67,6 +68,11 @@ class Files:
 
         if upload_metadata is not None:
             upload_metadata = to_metadata_dict(upload_metadata)
+
+        if upload_concat is not None:
+            if upload_concat not in ['partial', 'final']:
+                resp.status_code = api.status_codes.HTTP_400
+                return
 
         def set_creation_headers(resp, upload_data):
             resp.headers[headers.TUS_RESUMABLE] = CURRENT_TUS_VERSION
@@ -79,14 +85,15 @@ class Files:
                 return
 
             if int(upload_length) <= ACCEPTABLE_UPLOAD_SIZE:
-                upload_data = db.add_uploads(upload_length, metadata=upload_metadata)
+                upload_data = db.add_uploads(upload_length, metadata=upload_metadata, upload_concat=upload_concat)
                 set_creation_headers(resp, upload_data)
 
             else:
                 resp.status_code = api.status_codes.HTTP_413
 
         else:
-            upload_data = db.add_uploads(upload_length=None, upload_defer_length='1', metadata=upload_metadata)
+            upload_data = db.add_uploads(upload_length=None, upload_defer_length='1',
+                                         metadata=upload_metadata, upload_concat=upload_concat)
             set_creation_headers(resp, upload_data)
 
     def on_options(self, req, resp):
@@ -127,6 +134,9 @@ class File:
         resp.headers[headers.UPLOAD_OFFSET] = str(upload_data.upload_offset)
         if upload_data.upload_metadata is not None:
             resp.headers[headers.UPLOAD_METADATA] = to_metadata_header(upload_data.upload_metadata)
+
+        if upload_data.upload_concat is not None:
+            resp.headers[headers.UPLOAD_CONCAT] = upload_data.upload_concat
 
         if upload_data.upload_length is None:
             resp.headers[headers.UPLOAD_DEFER_LENGTH] = str(1)
