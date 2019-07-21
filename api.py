@@ -1,5 +1,6 @@
 import os
 import base64
+import re
 from uuid import UUID
 from pathlib import Path
 
@@ -70,8 +71,38 @@ class Files:
             upload_metadata = to_metadata_dict(upload_metadata)
 
         if upload_concat is not None:
-            if upload_concat not in ['partial', 'final']:
+            if upload_concat != 'partial' and not upload_concat.startswith('final'):
                 resp.status_code = api.status_codes.HTTP_400
+                return
+
+            if upload_concat.startswith('final;'):
+                pattern = re.compile(r'\/files\/([^\/\s]+)', re.RegexFlag.ASCII)
+                ids = [
+                    re.fullmatch(pattern, url)[1] for urls in upload_concat.split(';')[1:]
+                    for url in urls[0].split(' ') if re.fullmatch(pattern, url)
+                ]
+                upload_data = [db.get_by_id(id) for id in ids]
+                if None in upload_data:
+                    resp.status_code = api.status_codes.HTTP_400
+                    return
+
+                concat_id = '_'.join(ids)
+                concat_file = Path('/tmp', concat_id)
+
+                def copy_file(file_path, writer, buff_size=1024 * 1024):
+                    with open(file_path, 'rb') as input:
+                        data = input.read(buff_size)
+                        if len(data) > 0:
+                            writer.write(data)
+
+                mode = 'a+b'
+                with open(concat_file, mode) as output:
+                    for id in ids:
+                        merging_file = Path('/tmp', id)
+                        copy_file(merging_file, output)
+
+                resp.status_code = api.status_codes.HTTP_201
+                resp.headers[headers.LOCATION] = f'files/{concat_id}'
                 return
 
         def set_creation_headers(resp, upload_data):
